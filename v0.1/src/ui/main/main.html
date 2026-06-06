@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline';"
+    />
+    <link rel="stylesheet" href="main.css" />
+    <title>放置冒險 — 主面板</title>
+  </head>
+  <body>
+    <!-- 頂部:角色概況(常駐) -->
+    <header class="hdr">
+      <div class="hdr-id">
+        <span class="hdr-avatar">🧙</span>
+        <div class="hdr-name">
+          <div class="hdr-line">勇者 <span class="hdr-lv" id="hLv">Lv.1</span></div>
+          <div class="hdr-area" id="hArea">—</div>
+        </div>
+      </div>
+      <div class="hdr-vitals">
+        <div class="vital">
+          <span class="vlabel">HP</span>
+          <div class="bar hp"><div class="fill" id="hHpFill"></div><span class="bar-text" id="hHpText"></span></div>
+        </div>
+        <div class="vital">
+          <span class="vlabel">MP</span>
+          <div class="bar mp"><div class="fill" id="hMpFill"></div><span class="bar-text" id="hMpText"></span></div>
+        </div>
+        <div class="vital exp-vital">
+          <span class="vlabel">EXP</span>
+          <div class="bar exp"><div class="fill" id="hExpFill"></div><span class="bar-text" id="hExpText"></span></div>
+        </div>
+      </div>
+      <div class="hdr-right">
+        <div class="coin">💰 <span id="hGold">0</span></div>
+        <div class="points" id="hPoints">✦ 0</div>
+        <button class="collapse-btn" id="collapseBtn" title="收合回懸浮視窗">收合 ⤵</button>
+      </div>
+    </header>
+
+    <!-- 分頁列 -->
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="char">角色</button>
+      <button class="tab" data-tab="inv">背包 / 裝備</button>
+      <button class="tab" data-tab="craft">加工</button>
+      <button class="tab" data-tab="skill">技能</button>
+      <button class="tab" data-tab="map">地圖</button>
+      <button class="tab" data-tab="settings">設定</button>
+    </nav>
+
+    <!-- 內容區 -->
+    <main class="content">
+      <!-- ====== 角色 ====== -->
+      <section class="panel-tab active" data-panel="char">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">六大屬性 <span class="hint" id="statHint"></span></div>
+            <div class="stat-list" id="statList"></div>
+            <div class="respec-row">
+              <span class="respec-info" id="respecInfo">洗點費用 —</span>
+              <button class="btn danger" id="respecBtn">洗點(重置自由點)</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">衍生戰鬥數值</div>
+            <div class="derived-grid" id="derivedGrid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== 背包 / 裝備 ====== -->
+      <section class="panel-tab" data-panel="inv">
+        <div class="inv-cols">
+          <div class="card equip-card">
+            <div class="card-title">裝備</div>
+            <div class="equip-grid" id="equipGrid"></div>
+          </div>
+          <div class="card bag-card">
+            <div class="card-title">
+              背包 <span class="bag-count" id="bagCount"></span>
+              <button class="btn tiny" id="expandBtn">擴充</button>
+            </div>
+            <div class="bag-toolbar">
+              <button class="btn tiny filter-btn" id="bagFilterBtn">🔽 篩選 / 排序</button>
+              <span class="filter-summary" id="bagFilterSummary"></span>
+            </div>
+            <div class="bag-bulk">
+              <button class="btn tiny" id="bagSelAll">全選</button>
+              <button class="btn tiny" id="bagSelNone">清除</button>
+              <span class="bulk-info" id="bagBulkInfo">已選 0</span>
+              <button class="btn tiny" id="bagSell" disabled>販賣選取</button>
+              <button class="btn tiny danger" id="bagDiscard" disabled>丟棄選取</button>
+            </div>
+            <div class="inv-msg" id="invMsg"></div>
+            <div class="bag-list" id="bagList"></div>
+          </div>
+          <div class="card detail-card">
+            <div class="card-title">詳情</div>
+            <div class="item-detail" id="invDetail">
+              <div class="detail-empty">點背包物品或裝備格查看</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== 加工 ====== -->
+      <section class="panel-tab" data-panel="craft">
+        <div class="craft-cols">
+          <div class="card">
+            <div class="card-title">
+              選擇裝備
+              <button class="btn tiny filter-btn" id="craftFilterBtn">🔽 篩選</button>
+            </div>
+            <div class="filter-summary" id="craftFilterSummary"></div>
+            <div class="bag-list" id="craftList"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">升階加工</div>
+            <div id="craftPanel"><div class="detail-empty">從左側選一件裝備加工</div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">石頭庫存</div>
+            <div class="stone-list" id="stoneList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== 技能 ====== -->
+      <section class="panel-tab" data-panel="skill">
+        <div class="card">
+          <div class="card-title">技能槽(3 格,主動 / 被動共用)</div>
+          <div class="skill-slots" id="skillSlots"></div>
+          <div class="map-hint">
+            點下方技能書裝到空槽;點已裝技能書(或技能槽)可卸下。
+            主動:CD 到 + MP 足夠時自動施放;被動:裝上即常駐生效。
+          </div>
+          <div class="inv-msg" id="skillMsg"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">已擁有技能書 <span class="bag-count" id="skillCount"></span></div>
+          <div class="skill-book-list" id="skillBookList"></div>
+        </div>
+      </section>
+
+      <!-- ====== 地圖 ====== -->
+      <section class="panel-tab" data-panel="map">
+        <div class="card">
+          <div class="card-title">地圖等級</div>
+          <div class="map-level-row">
+            <button class="btn" id="mapMinus">−</button>
+            <div class="map-level-display">
+              <span class="big-num" id="mapSel">1</span>
+              <span class="map-level-sub">最高可選 <span id="mapMax">1</span></span>
+            </div>
+            <button class="btn" id="mapPlus">＋</button>
+            <button class="btn primary" id="mapGo">前往</button>
+            <button class="btn" id="mapTop">跳到最高</button>
+          </div>
+          <div class="map-hint">
+            低等地圖:清得快、適合刷錢素材 ·
+            高等地圖:物品等級高、掉寶品質好(REQ §8.6)
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">六大區域(目前地圖 <span id="mapCurLevel">1</span>)</div>
+          <div class="map-phase" id="mapPhase"></div>
+          <div class="area-grid" id="areaGrid"></div>
+          <div class="map-hint">
+            🏁 每區清完小怪 → 出現 <b>★ 區域王</b>;六區王全清 → <b>☆ 世界王</b>。
+            擊敗世界王 → 保底高階加工石 + 大量掉落 + 地圖等級 <b>+5</b>。打不過就調低地圖等級或點下方區域刷小怪練等／刷裝。
+            <br>💡 點任一區域可<b>指定刷該區</b>(配合設定的「自動打王 / 循環同一關卡」)。
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== 設定 ====== -->
+      <section class="panel-tab" data-panel="settings">
+        <div class="card">
+          <div class="card-title">戰鬥 / 刷怪</div>
+          <label class="toggle-row">
+            <input type="checkbox" id="setAutoBoss" />
+            <span class="toggle-text"><b>自動打王</b><span class="toggle-sub">關閉 → 只持續刷小怪(練等 / 刷裝),不出現 Boss</span></span>
+          </label>
+          <label class="toggle-row">
+            <input type="checkbox" id="setLoopStage" />
+            <span class="toggle-text"><b>循環同一關卡</b><span class="toggle-sub">開啟 → 擊敗區域王後留在同一區重複刷(不前進、不打世界王)</span></span>
+          </label>
+        </div>
+        <div class="card">
+          <div class="card-title">一般</div>
+          <div class="map-hint">
+            存檔自動保存(每 30 秒 / 關閉時)。關閉懸浮視窗 = 完全結束程式。
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">開發者</div>
+          <div class="dev-unlock">
+            <input id="devCode" type="text" placeholder="輸入測試碼" autocomplete="off" />
+            <button class="btn" id="devUnlockBtn">解鎖</button>
+            <span class="inv-msg" id="devMsg"></span>
+          </div>
+
+          <div id="devPanel" class="dev-panel hidden">
+            <div class="dev-title">🛠 開發者測試面板</div>
+            <div class="dev-row">
+              <button class="btn danger" id="devReset">一鍵重置角色資料</button>
+              <button class="btn" id="devClear">一鍵清空倉庫</button>
+            </div>
+            <div class="dev-row">
+              <button class="btn" id="devInfGold">💰 金錢無限:關</button>
+              <button class="btn" id="devInfStones">🪨 加工石無限:關</button>
+            </div>
+
+            <div class="dev-mult">
+              <div class="dev-mult-label">經驗值倍率 <span class="dev-cur" id="devExpCur">×1</span></div>
+              <div class="dev-mult-row">
+                <input type="range" id="devExpSlider" min="0" max="1000" step="1" />
+                <input type="number" id="devExpInput" min="0.25" max="1000" step="0.25" />
+                <button class="btn primary" id="devExpApply">確認</button>
+              </div>
+            </div>
+
+            <div class="dev-mult">
+              <div class="dev-mult-label">掉落率倍率 <span class="dev-cur" id="devDropCur">×1</span></div>
+              <div class="dev-mult-row">
+                <input type="range" id="devDropSlider" min="0" max="1000" step="1" />
+                <input type="number" id="devDropInput" min="0.25" max="1000" step="0.25" />
+                <button class="btn primary" id="devDropApply">確認</button>
+              </div>
+            </div>
+            <div class="dev-hint">倍率範圍 0.25× ~ 1000×(拖曳為對數刻度;可直接輸入,按「確認」才套用)。</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ====== 篩選 / 排序 彈出視窗(背包 + 加工共用)====== -->
+    <div class="filter-modal hidden" id="filterModal">
+      <div class="filter-box">
+        <div class="filter-head">
+          <span>篩選 / 排序</span>
+          <button class="btn tiny" id="filterClose">✕</button>
+        </div>
+        <div class="filter-group">
+          <div class="fg-label">類別</div>
+          <span class="filters" id="invFilters">
+            <button class="chip active" data-f="all">全部</button>
+            <button class="chip" data-f="weapon">武器</button>
+            <button class="chip" data-f="armor">防具</button>
+            <button class="chip" data-f="ring">飾品</button>
+          </span>
+        </div>
+        <div class="filter-group">
+          <div class="fg-label">稀有度</div>
+          <span class="filters" id="invRarities">
+            <button class="chip active" data-r="all">全部</button>
+            <button class="chip" data-r="common">普通</button>
+            <button class="chip" data-r="magic">魔法</button>
+            <button class="chip" data-r="rare">稀有</button>
+            <button class="chip" data-r="epic">史詩</button>
+            <button class="chip" data-r="legendary">傳說</button>
+          </span>
+        </div>
+        <div class="filter-group">
+          <div class="fg-label">排序</div>
+          <select class="sort-sel" id="invSort">
+            <option value="ilvl-desc">物等 ↓</option>
+            <option value="ilvl-asc">物等 ↑</option>
+            <option value="rarity-desc">稀有度 ↓</option>
+            <option value="sell-desc">售價 ↓</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="fg-check"><input type="checkbox" id="filterFavOnly" /> 只看 ★ 我的最愛</label>
+        </div>
+      </div>
+    </div>
+
+    <script src="main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';" />
+    <link rel="stylesheet" href="overlay.css" />
+    <title>放置冒險</title>
+  </head>
+  <body>
+    <div id="panel" class="panel">
+      <!-- 頂列:等級 / 區域 / 關閉(可拖曳) -->
+      <div class="topbar" id="dragHandle">
+        <span class="lv" id="lv">Lv.1</span>
+        <span class="area" id="area">—</span>
+        <button class="open-btn" id="openBtn" title="開啟主面板">⛶</button>
+        <button class="hide-btn" id="hideBtn" title="關閉並結束遊戲">×</button>
+      </div>
+
+      <!-- 對戰區:左角色 / 右怪物 -->
+      <div class="arena" id="arena" title="點兩下開啟主面板">
+        <!-- 角色側 -->
+        <div class="side char-side">
+          <div class="avatar" id="charAvatar">🧙</div>
+          <div class="combatant">
+            <div class="name" id="charName">勇者</div>
+            <div class="bar hp">
+              <div class="fill" id="hpFill"></div>
+              <span class="bar-text" id="hpText"></span>
+            </div>
+            <div class="bar mp">
+              <div class="fill" id="mpFill"></div>
+              <span class="bar-text" id="mpText"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="vs">VS</div>
+
+        <!-- 怪物側 -->
+        <div class="side enemy-side">
+          <div class="combatant">
+            <div class="name enemy-name" id="enemyName">尋找中…</div>
+            <div class="bar enemy">
+              <div class="fill" id="enemyHpFill"></div>
+              <span class="bar-text" id="enemyHpText"></span>
+            </div>
+          </div>
+          <div class="avatar" id="enemyAvatar">👾</div>
+        </div>
+
+        <!-- 飄字層 -->
+        <div class="floaters" id="floaters"></div>
+      </div>
+
+      <!-- 底列:進度 -->
+      <div class="progress" id="progress">Stage —</div>
+    </div>
+
+    <!-- 離線結算 -->
+    <div class="offline-modal hidden" id="offlineModal">
+      <div class="offline-box">
+        <div class="offline-title">離線收益</div>
+        <div class="offline-body" id="offlineBody"></div>
+        <button id="offlineClaim">領取</button>
+      </div>
+    </div>
+
+    <script src="overlay.js"></script>
+  </body>
+</html>

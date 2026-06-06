@@ -1,0 +1,275 @@
+/* 收合態懸浮小視窗 — 左右對戰佈局 (REQ §11.2) */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+  color: #eee;
+}
+
+.panel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 5px 8px 4px;
+  background: rgba(20, 22, 30, 0.82);
+  border: 1px solid rgba(120, 130, 160, 0.35);
+  border-radius: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  backdrop-filter: blur(4px);
+}
+
+/* 頂列 */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  -webkit-app-region: drag;
+  cursor: move;
+}
+.topbar .lv {
+  font-weight: bold;
+  color: #ffd866;
+}
+.topbar .area {
+  font-size: 10px;
+  color: #9aa6c2;
+  margin-left: auto;
+}
+.open-btn,
+.hide-btn {
+  -webkit-app-region: no-drag;
+  background: transparent;
+  border: none;
+  color: #889;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.open-btn:hover {
+  color: #ffd866;
+}
+.hide-btn:hover {
+  color: #fff;
+}
+
+/* 對戰區:左右兩側 + 中間 VS */
+.arena {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 8px;
+}
+/* Boss 戰:整個面板紅框 + 紅光(區域王) */
+.panel {
+  transition: box-shadow 0.3s, border-color 0.3s;
+}
+.panel.boss-fight {
+  border-color: #e0533a;
+  box-shadow: 0 0 0 1px #e0533a inset, 0 0 16px rgba(224, 83, 58, 0.5);
+}
+.panel.boss-fight .enemy-side .name {
+  color: #ff9b88;
+  font-weight: bold;
+}
+.panel.boss-fight .enemy-side .avatar {
+  font-size: 26px;
+}
+/* 世界王:紫紅更醒目 */
+.panel.world-boss {
+  border-color: #c060e0;
+  box-shadow: 0 0 0 1px #c060e0 inset, 0 0 18px rgba(192, 96, 224, 0.55);
+}
+.panel.world-boss .enemy-side .name {
+  color: #f0c8ff;
+}
+.side {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+.enemy-side {
+  flex-direction: row-reverse; /* 怪物頭像在右 */
+}
+.avatar {
+  font-size: 22px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.combatant {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.name {
+  font-size: 10px;
+  color: #cdd3e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.enemy-side .name {
+  text-align: right;
+}
+.enemy-name {
+  color: #f0a9a9;
+}
+
+.vs {
+  font-size: 9px;
+  font-weight: bold;
+  color: #6b7488;
+  flex-shrink: 0;
+  padding: 0 1px;
+}
+
+/* 血條 / 魔條 */
+.bar {
+  position: relative;
+  width: 100%;
+  height: 11px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.bar .fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0%;
+  transition: width 0.12s linear;
+}
+.bar.hp .fill {
+  background: linear-gradient(90deg, #e74c3c, #ff7b6b);
+}
+.bar.mp .fill {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+.bar.enemy .fill {
+  background: linear-gradient(90deg, #b25be0, #d28bf0);
+}
+/* 怪物血條由右往左縮(視覺上對稱) */
+.enemy-side .bar .fill {
+  left: auto;
+  right: 0;
+}
+.bar-text {
+  position: absolute;
+  inset: 0;
+  text-align: center;
+  line-height: 11px;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
+}
+
+/* 底列進度 */
+.progress {
+  font-size: 9px;
+  color: #8b93a8;
+  text-align: center;
+}
+
+/* 飄字 */
+.floaters {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+.floater {
+  position: absolute;
+  font-weight: bold;
+  font-size: 12px;
+  animation: floatUp 0.9s ease-out forwards;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+.floater.enemy {
+  color: #ffe08a;
+}
+.floater.crit {
+  color: #ff5252;
+  font-size: 16px;
+}
+.floater.char {
+  color: #ff8a8a;
+}
+/* 魔法傷害:紫色(magic crit 更亮紫,字級沿用 .crit)*/
+.floater.magic {
+  color: #c77dff;
+}
+.floater.magic.crit {
+  color: #e0aaff;
+}
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-22px);
+  }
+}
+
+/* 離線結算彈窗 */
+.offline-modal {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+}
+.offline-modal.hidden {
+  display: none;
+}
+.offline-box {
+  background: #1c2030;
+  border: 1px solid #3a4258;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  width: 90%;
+}
+.offline-title {
+  font-weight: bold;
+  color: #ffd866;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+.offline-body {
+  font-size: 10px;
+  line-height: 1.6;
+  margin-bottom: 7px;
+}
+#offlineClaim {
+  background: #ffd866;
+  color: #222;
+  border: none;
+  border-radius: 5px;
+  padding: 3px 14px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 11px;
+}

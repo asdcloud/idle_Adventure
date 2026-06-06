@@ -1,0 +1,27 @@
+# ── 依賴 / 環境(可重建,勿入庫)──
+v0.1/node_modules/
+v0.1/.condaenv/
+
+# ── 建置產物(由 `npm run build` / esbuild 產生)──
+v0.1/dist/
+v0.1/dist-test/
+v0.1/release/
+# 舊的散落建置產物(現已改由 dist/ 產出)
+v0.1/main.js
+v0.1/overlay.html
+
+# ── 打包檔 ──
+*.zip
+
+# ── headless 測試暫存腳本 ──
+v0.1/_*.ts
+v0.1/_*.mjs
+
+# ── 本地滾動備份(改用 git 版本控制後即可不需)──
+_backups/
+
+# ── OS / 編輯器 ──
+.DS_Store
+Thumbs.db
+*.log
+*.tmp

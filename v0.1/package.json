@@ -1,0 +1,44 @@
+{
+  "name": "idle-adventure",
+  "version": "0.1.0",
+  "description": "放置養成冒險遊戲 — 桌面懸浮視窗 (v0.1 骨架)",
+  "main": "dist/shell/main.js",
+  "author": "GAME",
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "dev": "node esbuild.config.mjs --watch",
+    "start": "electron .",
+    "pack:win": "node esbuild.config.mjs && electron-builder --win --x64 --dir",
+    "dist:win": "node esbuild.config.mjs && electron-builder --win --x64"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
+    "esbuild": "^0.23.0",
+    "typescript": "^5.5.0"
+  },
+  "build": {
+    "appId": "com.game.idleadventure",
+    "productName": "IdleAdventure",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "IdleAdventure-${version}-portable.exe"
+    }
+  }
+}
