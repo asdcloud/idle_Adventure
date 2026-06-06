@@ -69,6 +69,10 @@ GAME/
 
 詳細設計見 **[REQUIREMENTS.md](REQUIREMENTS.md)**(需求 / 數值),架構見 **[ARCHITECTURE.md](ARCHITECTURE.md)**,開發歷程見 **[DEV_LOG.md](DEV_LOG.md)**。
 
+## 下載遊玩
+
+可玩的打包版(Windows x64)請見本 repo 的 **[Releases](../../releases)**;版本說明見 [RELEASE_NOTES_v0.1.md](RELEASE_NOTES_v0.1.md)。
+
 ## 狀態
 
 開發中(v0.1)。核心系統皆已可運作,數值平衡持續調整中。

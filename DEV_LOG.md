@@ -34,6 +34,14 @@
 
 ## 2026-06-06
 
+### 發佈:v0.1(GitHub)
+
+- 專案上 GitHub:`asdcloud/idle_Adventure`(`.gitignore` 排除 node_modules / .condaenv / dist / release / _backups)。
+- 撰寫 **README.md** + **RELEASE_NOTES_v0.1.md**(release 敘述:內容/玩法/注意事項/已知限制)。
+- 可玩打包檔 `IdleAdventure-v0.1-win-x64.zip` 放 GitHub **Releases** 的 asset(不入庫;原始碼在 repo、二進位在 Releases)。
+
+---
+
 ### 離線收益:近期 3 分鐘實際速率(不足 3 分以簡單版補)
 
 - 需求:離線改用「近期 3 分鐘的實際收益速率」;開機不足 3 分鐘用簡單版補。
