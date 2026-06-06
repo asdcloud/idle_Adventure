@@ -34,6 +34,14 @@
 
 ## 2026-06-06
 
+### 修:地圖頁區域卡片點不到(高頻重繪吃掉點擊)
+
+- 症狀:選地圖/區域時點不準。成因:`renderMap` 每幀(10Hz)整個重建 `areaGrid.innerHTML`,點擊中途卡片 DOM 被換掉 → click 不觸發。
+- 修法:區域卡片只在「結構改變」時重建(key = `mapLevel|selectedMapLevel|areaIndex|phase`,不含 monstersDefeated);「目前區域」的小怪進度(bar + 文字)每幀**就地更新**(不重建 DOM)。→ 卡片 DOM 穩定、點擊可靠,進度仍即時。
+- (地圖等級 +/- 前往 為靜態按鈕,本來就不受影響。)
+
+---
+
 ### 發佈:v0.1(GitHub)
 
 - 專案上 GitHub:`asdcloud/idle_Adventure`(`.gitignore` 排除 node_modules / .condaenv / dist / release / _backups)。

@@ -152,6 +152,7 @@ const SLOTS: { key: string; icon: string; label: string }[] = [
 
 // 背包/裝備選取狀態與重畫門檻
 let lastInvVersion = -1;
+let lastMapStructKey = ''; // 地圖區域卡片只在結構改變時重建(避免高頻重繪吃掉點擊)
 let invFilter: 'all' | 'weapon' | 'armor' | 'ring' = 'all';
 let invRarity: 'all' | 'common' | 'magic' | 'rare' | 'epic' | 'legendary' = 'all';
 let invSort: 'ilvl-desc' | 'ilvl-asc' | 'rarity-desc' | 'sell-desc' = 'ilvl-desc';
@@ -303,33 +304,48 @@ function renderMap(s: Snapshot): void {
   }
 
   const cur = s.map.areaIndex; // = areaCount 時代表世界王階段
-  $('areaGrid').innerHTML = s.map.areas
-    .map((a, i) => {
-      const cleared = i < cur; // 本循環已清(打過區域王)
-      const isCur = i === cur && s.map.phase !== 'worldBoss';
-      const bossNow = isCur && s.map.phase === 'areaBoss';
-      const done = isCur ? s.map.monstersDefeated : cleared ? s.map.monstersPerArea : 0;
-      const total = s.map.monstersPerArea;
-      const w = bossNow ? 100 : (done / total) * 100;
-      const badge = bossNow
-        ? '<span class="badge-current">★ 區域王</span>'
-        : isCur
-          ? '<span class="badge-current">進行中</span>'
-          : cleared
-            ? '<span class="badge-done">✔ 已清</span>'
-            : '';
-      const prog = bossNow ? '★ 區域王 待戰' : cleared ? '已通關' : `小怪 ${done}/${total}`;
-      return (
-        `<div class="area-card pick ${isCur ? 'current' : ''} ${cleared ? 'cleared' : ''} ${bossNow ? 'boss' : ''}" data-area="${i}" title="點擊指定刷此區域">` +
-        `<div class="a-top"><span class="a-emoji">${AREA_EMOJI[i % AREA_EMOJI.length]}</span>` +
-        `<div><div class="a-name">${a.name}</div><div class="a-emph">強化 ${a.emphasis}</div></div>` +
-        `${badge}</div>` +
-        `<div class="a-prog">${prog}</div>` +
-        `<div class="mini-bar"><div style="width:${w}%"></div></div>` +
-        `</div>`
-      );
-    })
-    .join('');
+  const total = s.map.monstersPerArea;
+
+  // 區域卡片只在「結構」改變時重建(等級/區域/階段),不含 monstersDefeated → 避免每幀重建吃掉點擊
+  const structKey = `${s.map.mapLevel}|${s.map.selectedMapLevel}|${cur}|${s.map.phase}`;
+  if (structKey !== lastMapStructKey) {
+    lastMapStructKey = structKey;
+    $('areaGrid').innerHTML = s.map.areas
+      .map((a, i) => {
+        const cleared = i < cur;
+        const isCur = i === cur && s.map.phase !== 'worldBoss';
+        const bossNow = isCur && s.map.phase === 'areaBoss';
+        const done = isCur ? s.map.monstersDefeated : cleared ? total : 0;
+        const w = bossNow ? 100 : (done / total) * 100;
+        const badge = bossNow
+          ? '<span class="badge-current">★ 區域王</span>'
+          : isCur
+            ? '<span class="badge-current">進行中</span>'
+            : cleared
+              ? '<span class="badge-done">✔ 已清</span>'
+              : '';
+        const prog = bossNow ? '★ 區域王 待戰' : cleared ? '已通關' : `小怪 ${done}/${total}`;
+        return (
+          `<div class="area-card pick ${isCur ? 'current' : ''} ${cleared ? 'cleared' : ''} ${bossNow ? 'boss' : ''}" data-area="${i}" title="點擊指定刷此區域">` +
+          `<div class="a-top"><span class="a-emoji">${AREA_EMOJI[i % AREA_EMOJI.length]}</span>` +
+          `<div><div class="a-name">${a.name}</div><div class="a-emph">強化 ${a.emphasis}</div></div>` +
+          `${badge}</div>` +
+          `<div class="a-prog">${prog}</div>` +
+          `<div class="mini-bar"><div style="width:${w}%"></div></div>` +
+          `</div>`
+        );
+      })
+      .join('');
+  }
+
+  // 每幀就地更新「目前區域」的小怪進度(不重建 DOM → 點擊穩定)
+  if (s.map.phase === 'mob') {
+    const card = document.querySelector(`#areaGrid .area-card[data-area="${cur}"]`);
+    const prog = card?.querySelector('.a-prog');
+    const bar = card?.querySelector('.mini-bar > div') as HTMLElement | null;
+    if (prog) prog.textContent = `小怪 ${s.map.monstersDefeated}/${total}`;
+    if (bar) bar.style.width = `${(s.map.monstersDefeated / total) * 100}%`;
+  }
 }
 
 // 共用:套用類別 + 稀有度 + 我的最愛篩選 + 排序(背包與加工頁共用)
