@@ -10,7 +10,8 @@ import { emptyEquipment, TYPE_INFO } from '../items/types';
 // v5:dev 開發者測試設定(經驗/掉落倍率)
 // v6:裝備系統大改(武器分類 / 詞綴擴充 / 護甲值);舊裝備不相容 → 遷移時清空
 // v7:玩家設定 settings(autoBoss 自動打王開關)
-export const SAVE_VERSION = 7;
+// v8:離線收益近期速率取樣(runtime.earnedGold/Exp + offline 速率)
+export const SAVE_VERSION = 8;
 
 function startingStats(): Stats {
   const v = BALANCE.startingStat;
@@ -79,9 +80,12 @@ export function createNewGame(now: number): GameState {
       totalKills: 0,
       invVersion: 0,
       skillCooldowns: [0, 0, 0],
+      earnedGold: 0,
+      earnedExp: 0,
     },
     settings: { autoBoss: true, loopStage: false },
     dev: { expMult: 1, dropMult: 1, infiniteGold: false, infiniteStones: false },
     lastSeenTimestamp: now,
+    offline: { goldPerSec: 0, expPerSec: 0 },
   };
 }

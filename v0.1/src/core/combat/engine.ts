@@ -144,8 +144,12 @@ function onEnemyKilled(state: GameState, rng: () => number, dropBonus: number, e
   if (reward) {
     // dev 倍率:經驗 / 掉落(開發者測試面板)+ 經驗獲取詞綴
     const dropMult = state.dev.dropMult;
-    gainExp(c, Math.round(reward.expReward * state.dev.expMult * (1 + expGainPct)));
+    const expGain = Math.round(reward.expReward * state.dev.expMult * (1 + expGainPct));
+    gainExp(c, expGain);
     c.gold += reward.goldReward;
+    // 累計實際收益(供離線「近期速率」取樣)
+    state.runtime.earnedGold += reward.goldReward;
+    state.runtime.earnedExp += expGain;
     if (reward.boss === 'area') {
       // 區域 Boss:保底掉落 dropRolls 件(里程碑獎勵,不受低基礎掉落率影響)+ 一顆石頭
       for (let k = 0; k < BALANCE.boss.area.dropRolls; k++) {

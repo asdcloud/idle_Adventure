@@ -14,6 +14,7 @@ import {
   selectArea,
   setAutoBoss,
   setLoopStage,
+  gainExp,
   defaultRng,
   expToNext,
   currentAreaName,
@@ -142,19 +143,58 @@ function closeMain(): void {
   if (mainWin && !mainWin.isDestroyed()) mainWin.hide();
 }
 
-/** 離線結算(REQ §10) */
+// ── 離線收益:近期實際速率取樣(REQ §10.1)──
+const OFFLINE_WINDOW_SEC = 180; // 近期 3 分鐘
+const incomeSamples: { t: number; gold: number; exp: number }[] = [];
+
+/** 每秒記一筆「累計收益」,保留最近 3 分鐘 */
+function sampleIncome(): void {
+  const now = Date.now();
+  incomeSamples.push({ t: now, gold: state.runtime.earnedGold, exp: state.runtime.earnedExp });
+  const cutoff = now - OFFLINE_WINDOW_SEC * 1000;
+  while (incomeSamples.length > 1 && incomeSamples[0].t < cutoff) incomeSamples.shift();
+}
+
+/** 簡單版每秒速率(本次開機不足 3 分鐘時的補值基準) */
+function simpleRate(): { goldPerSec: number; expPerSec: number } {
+  const g = 1 + state.character.level * 0.3;
+  return { goldPerSec: g, expPerSec: g * 0.5 * state.dev.expMult };
+}
+
+/** 由近期視窗算離線每秒速率;視窗不足 3 分鐘 → 缺少時間用簡單版補足,平均到 3 分鐘 */
+function computeOfflineRate(): { goldPerSec: number; expPerSec: number } {
+  const simple = simpleRate();
+  if (incomeSamples.length < 2) return simple;
+  const first = incomeSamples[0];
+  const last = incomeSamples[incomeSamples.length - 1];
+  const winSec = Math.min(OFFLINE_WINDOW_SEC, (last.t - first.t) / 1000);
+  if (winSec < 1) return simple;
+  const wGold = last.gold - first.gold;
+  const wExp = last.exp - first.exp;
+  const W = OFFLINE_WINDOW_SEC;
+  return {
+    goldPerSec: (wGold + simple.goldPerSec * (W - winSec)) / W,
+    expPerSec: (wExp + simple.expPerSec * (W - winSec)) / W,
+  };
+}
+
+/** 存檔前更新:時間戳 + 離線速率快照,然後寫檔 */
+function persist(): void {
+  state.lastSeenTimestamp = Date.now();
+  state.offline = computeOfflineRate();
+  saveGame(state);
+}
+
+/** 離線結算(REQ §10):用存檔時的「近期速率」× 時間 × 效率 */
 function settleOffline(now: number): { seconds: number; gold: number; exp: number } {
   const elapsed = Math.max(0, (now - state.lastSeenTimestamp) / 1000);
   const capped = Math.min(elapsed, OFFLINE_CAP_HOURS * 3600);
   if (capped < 5) return { seconds: 0, gold: 0, exp: 0 };
-  // v0.1 估算:用一個保守的每秒基準 × 效率(尚無「最近5分鐘速率」取樣,先用粗估)
-  const perSec = 1 + state.character.level * 0.3;
-  const gold = Math.floor(perSec * capped * OFFLINE_EFFICIENCY);
-  const exp = Math.floor(perSec * 0.5 * capped * OFFLINE_EFFICIENCY * state.dev.expMult);
+  const rate = state.offline && state.offline.goldPerSec > 0 ? state.offline : simpleRate();
+  const gold = Math.floor(rate.goldPerSec * capped * OFFLINE_EFFICIENCY);
+  const exp = Math.floor(rate.expPerSec * capped * OFFLINE_EFFICIENCY);
   state.character.gold += gold;
-  // 經驗直接灌(走核心升級邏輯)
-  // 注意:離線不推進地圖(REQ §10.2),只給資源
-  state.character.exp += exp;
+  gainExp(state.character, exp); // 走核心升級邏輯 → 回來立即結算離線升級(不推進地圖,REQ §10.2)
   return { seconds: Math.floor(capped), gold, exp };
 }
 
@@ -165,11 +205,11 @@ function startLoops(): void {
     broadcast();
   }, TICK_MS);
 
-  // 自動存檔
-  setInterval(() => {
-    state.lastSeenTimestamp = Date.now();
-    saveGame(state);
-  }, SAVE_MS);
+  // 近期收益取樣(每秒)
+  setInterval(sampleIncome, 1000);
+
+  // 自動存檔(含離線速率快照)
+  setInterval(persist, SAVE_MS);
 }
 
 /** 把同一份快照推給兩個視窗(floaters 只在這裡消費一次) */
@@ -388,7 +428,6 @@ if (!gotLock) {
 
   app.on('before-quit', () => {
     isQuitting = true;
-    state.lastSeenTimestamp = Date.now();
-    saveGame(state);
+    persist(); // 存檔 + 記錄離線速率快照(近期 3 分鐘)
   });
 }

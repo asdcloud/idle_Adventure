@@ -30,6 +30,10 @@ function migrate(data: GameState): GameState {
   if (!data.settings) data.settings = { autoBoss: true, loopStage: false };
   if (typeof data.settings.autoBoss !== 'boolean') data.settings.autoBoss = true;
   if (typeof data.settings.loopStage !== 'boolean') data.settings.loopStage = false;
+  // v7→v8:離線收益近期速率取樣
+  if (data.runtime && typeof data.runtime.earnedGold !== 'number') data.runtime.earnedGold = 0;
+  if (data.runtime && typeof data.runtime.earnedExp !== 'number') data.runtime.earnedExp = 0;
+  if (!data.offline) data.offline = { goldPerSec: 0, expPerSec: 0 };
   // v5→v6:裝備模型大改(武器分類/詞綴擴充/護甲值)→ 舊裝備不相容,清空裝備與背包物品
   if (typeof data.version === 'number' && data.version < 6) {
     data.equipment = emptyEquipment();

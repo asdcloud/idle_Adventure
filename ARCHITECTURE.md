@@ -144,8 +144,7 @@ GAME/
 │  │  │  └─ dropTable.ts      # 線上 / 離線(獨立池)掉落邏輯(REQ §5.10/§10.5)
 │  │  ├─ map/
 │  │  │  └─ enemy.ts          # 六區域、小怪屬性曲線(低等緩坡 + 高等 HP 非線性遞減)、makeMonster / makeBoss(區域+世界王)(REQ §8)
-│  │  ├─ offline/
-│  │  │  └─ settle.ts         # 離線估算結算(REQ §10)
+│  │  │  (離線結算實作於 shell/main.ts:近期 3 分鐘速率取樣 + 不足以簡單版補,REQ §10.1)
 │  │  └─ index.ts             # 核心對外 API(供 shell 呼叫)
 │  │
 │  ├─ data/                  # 可調平衡資料(與程式分離)
@@ -216,10 +215,12 @@ GameState {
     attackBars: { char, enemy }
     skillCooldowns: ...
     invVersion: number         // 背包/裝備版本(UI 依此才重畫)
-    recentIncome: ...          // 最近收益速率取樣(離線估算用)
+    earnedGold / earnedExp     // 累計實際收益(離線近期速率取樣用)
   }
-  dev: { expMult, dropMult }   // 開發者測試倍率(設定頁解鎖,REQ §12)
+  settings: { autoBoss, loopStage }            // 玩家設定
+  dev: { expMult, dropMult, infiniteGold, infiniteStones }  // 開發者測試(設定頁解鎖,REQ §12)
   lastSeenTimestamp: number    // 離線結算基準
+  offline: { goldPerSec, expPerSec }           // 離線速率快照(近期3分;§10.1)
 }
 ```
 
@@ -234,10 +235,10 @@ GameState {
 - 每 tick:推進攻擊計時條 → 判定出手 → 戰鬥結算 → 掉落 → 經驗/升級 → 區域推進。
 - 狀態快照經 IPC 推給 overlay(高頻畫面)與 main 視窗(開啟時)。
 
-### 離線結算
-- 啟動時讀 `lastSeenTimestamp`,算離線秒數(上限套用 §10.4)。
-- 用 `runtime.recentIncome`(最近 5 分鐘速率)× 離線秒數 × 效率% → 估算金幣/經驗。
-- 走**獨立離線掉落池**(金幣經驗為主)。
+### 離線結算(shell/main.ts,已實作)
+- 啟動時讀 `lastSeenTimestamp`,算離線秒數(上限 8h)。
+- 速率 = `state.offline`(存檔時由「近期 3 分鐘實際速率」快照;不足 3 分以簡單版 `1+等級×0.3` 補)× 離線秒數 × 效率 70% → 金幣/經驗(經驗走 `gainExp` 立即結算升級)。
+- 只給金幣/經驗,**不掉裝備/石頭、不推進地圖**(§10.2)。
 - **不推進 Boss / 地圖**。
 - 產生 `offline:report` 給 UI 跳結算視窗。
 

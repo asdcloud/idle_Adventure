@@ -26,7 +26,7 @@ export {
   hpRegenPerSec,
   mpRegenPerSec,
 } from './formulas/derived';
-export { expToNext, killsToLevel, monsterExpReward, monsterGold } from './formulas/leveling';
+export { expToNext, killsToLevel, monsterExpReward, monsterGold, gainExp } from './formulas/leveling';
 
 // --- 裝備系統 (M4) ---
 export type {

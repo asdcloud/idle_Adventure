@@ -91,6 +91,9 @@ export interface Runtime {
   invVersion: number;
   /** 3 個技能槽的冷卻剩餘秒數(對應 skillSlots) */
   skillCooldowns: number[];
+  /** 累計從戰鬥獲得的金幣 / 經驗(僅供離線收益「近期速率」取樣;單調遞增) */
+  earnedGold: number;
+  earnedExp: number;
 }
 
 /** 背包 (REQ §6.9) */
@@ -144,4 +147,6 @@ export interface GameState {
   dev: DevSettings;
   /** 上次在線時間戳(離線結算用) */
   lastSeenTimestamp: number;
+  /** 離線收益速率(存檔時由「近期 3 分鐘實際速率」算出,不足 3 分以簡單版補;每秒、未乘效率)*/
+  offline: { goldPerSec: number; expPerSec: number };
 }
